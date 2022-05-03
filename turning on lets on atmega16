@@ -1,0 +1,21 @@
+//simple c progam to let user turn on the leds by pressing switches on stk 500 board  
+#include <avr/io.h> //avr header filr for registers/pins
+
+int main(void) {
+  unsigned char i;// temporary variable  (unsigned is positive only)
+  DDRA = 0*00; //set portA 
+  DDRB = 0*FF; //set port B for output 
+  PORTB = 0*00; //turn ON all LEDs initially 
+
+  //while(1) mean infinite loop 
+  while(1){
+    //read input from from port A 
+    //this port will always be connected to 8 switches 
+    i=PINA;
+    
+    //send output to portB
+    //this port will be connected to the 8 LEDs
+    PORTB = i;
+  }
+  return 1;
+}
