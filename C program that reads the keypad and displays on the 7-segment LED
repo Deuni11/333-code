@@ -1,0 +1,115 @@
+/*
+ * GccApplication4.c
+ *
+ * Created: 6/05/2022 5:06:25 AM
+ * Author : dsp852
+ */ 
+//creating a c program that reads the keypad and displays on the 7-segment LED
+
+#include <avr/io.h>	   		  
+		                        	
+		
+unsigned char read_keypad(void){
+	unsigned char key;           // key press
+	unsigned char port_value;    // to store input value from port
+	
+	// Array to make scanning the keypad more efficient
+	unsigned char keypad_col_bit[3] = {6, 5, 4};
+	unsigned char keypad_row_bit[4] = {3, 2, 1, 0};
+	unsigned char keypad_key[3][4] = {{'1', '4', '7', '*'},
+	{'2', '5', '8', '0'},
+	{'3', '6', '9', '#'}};
+	unsigned char col; // column on keypad: 1, 2, 3
+	unsigned char row; // row on keypad:    1, 2, 3, 4
+
+	// Configure port
+	DDRB = 0b11110000; // Pins 0-3 for output and 4-7 for input 
+
+	/* Scan the keypad to find which key is being pressed */
+	key = 0;
+	for (col = 1; col <= 3; col++){
+		// Send binary ZERO to corresponding pin for the column
+		PORTB = ~(1 << (keypad_col_bit[col-1]));
+
+		// Create a short delay
+		asm volatile("nop");
+		asm volatile("nop");
+
+		// Read back from port
+		port_value = PINB;
+		
+		for (row = 1; row <= 4; row ++){
+			// Check the corresponding pin for the row
+			if ((port_value & (1 << (keypad_row_bit[row-1]))) ==0)
+			key = keypad_key[col-1][row-1];
+		}
+	}
+	return key;
+}
+
+void display_7led(unsigned char key){
+	DDRA = 0xFF;
+	
+	switch(key){
+		case '1':
+		PORTA = 0b00000110;
+		break;
+		case '2':
+		PORTA = 0b01011011;
+		break;
+		case '3':
+		PORTA = 0b01001111;
+		break;
+		case '4':
+		PORTA = 0b01100110;
+		break;
+		case '5':
+		PORTA = 0b01101101;
+		break;
+		case '6':
+		PORTA = 0b01111101;
+		break;
+		case '7':
+		PORTA = 0b00000111;
+		break;
+		case '8':
+		PORTA = 0b01111111;
+		break;
+		case '9':
+		PORTA = 0b01101111;
+		break;
+		case '0':
+		PORTA = 0b00111111;
+		break;
+		case '*':
+		PORTA = 0b01000110;
+		break;
+		case '#':
+		PORTA = 0b01100011;
+		break;
+		default:
+		PORTA = 0b00000000;
+	}
+}
+	
+
+
+int main(void)
+{
+	unsigned char reading;
+	unsigned char prevreading = 0x00;
+	
+	read_keypad();
+	
+    while(1){
+	reading = read_keypad();
+	if(reading != prevreading){
+		display_7led(reading);
+	}
+	else{
+		continue;
+	}
+   
+    
+}
+}
