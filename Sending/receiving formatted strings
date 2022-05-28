@@ -1,0 +1,31 @@
+#include <avr/io.h>
+#include <stdio.h>
+
+int serial_send(char c, FILE *stream){  
+while ((UCSRA & (1 << UDRE)) == 0x00){;} // Wait until UDRE flag is set to logic 1
+UDR = c;                                // Write character to UDR for transmission
+return 0;
+}
+
+int serial_receive(FILE *stream){  
+while ((UCSRA & (1 << RXC)) == 0x00){;} // Wait until RXC flag is set to logic 1
+return UDR;     // Read the received character from UDR
+}
+
+int main(void){
+   unsigned int a;
+
+// ... Code to initialise baudrate, TXD, RXD, and so on is not shown here
+
+
+
+stdout = fdevopen(serial_send, NULL); // Initialise the standard IO handlers
+stdin = fdevopen(NULL, serial_receive);
+
+
+
+   while (1){
+       printf(“\n\rEnter a = ");
+        scanf(“%d”, &a); printf(“%d”, a);// Start using printf, scanf as usual
+  } 
+}
