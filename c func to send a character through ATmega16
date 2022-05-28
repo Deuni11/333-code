@@ -1,0 +1,5 @@
+void serial_send(unsigned char data){
+
+while((UCSRA & (1<<UDRE)) == 0x00) {;} //wait until UDRE flag =1 
+UDR=data;       //write char to UDR for transmission
+}
