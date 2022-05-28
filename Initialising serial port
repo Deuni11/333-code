@@ -17,3 +17,8 @@ void serial_send(unsigned char data){
 while((UCSRA & (1<<UDRE)) == 0x00) {;} //wait until UDRE flag =1 
 UDR=data;                              //write char to UDR for transmission
 } 
+
+unsigned char serial_receive(void){ 
+while ((UCSRA & (1 << RXC)) == 0x00){;} // Wait until RXC flag = 1
+return (UDR);                           // Read the received char from UDR
+}
