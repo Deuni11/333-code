@@ -11,3 +11,9 @@ UBRRH = 0x00;
 
 UCSRB = 0b00011000; // Enable Tx and Rx, disable interrupts
 }
+
+void serial_send(unsigned char data){
+
+while((UCSRA & (1<<UDRE)) == 0x00) {;} //wait until UDRE flag =1 
+UDR=data;                              //write char to UDR for transmission
+} 
