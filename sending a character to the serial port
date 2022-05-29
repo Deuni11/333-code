@@ -1,0 +1,109 @@
+Lab 2 Task 1
+/*
+* lab8t1.c
+*
+* Created: 25/03/2022 10:36:13 AM
+* Author : sat426
+*/ 
+ 
+#include <avr/io.h>
+ 
+// Function to read the 4x3 keypad and return the ASCII code of the key press
+// If no key is pressed, return 0
+// Assumption: Keypad is connected to PORT B (change code if using other port)
+//(C) Lam Phung
+ 
+// Serial initialization
+void serial_init(void){
+ 
+// Asynchronous mode, no parity, 1 stop bit, 8 data bits
+ 
+UCSRC = 0b10000110;
+ 
+// Normal speed, disable multi-proc
+ 
+UCSRA = 0b00000000;
+ 
+// Baud rate 1200bps, assuming 1MHz clock
+ 
+UBRRL = 0x33;
+ 
+UBRRH = 0x00;
+ 
+// Enable Tx and Rx, disable interrupts
+ 
+UCSRB = 0b00011000;
+ 
+}
+ 
+unsigned char read_keypad(void){
+unsigned char key;           // key press
+unsigned char port_value;    // to store input value from port
+
+// Array to make scanning the keypad more efficient
+unsigned char keypad_col_bit[3] = {6, 5, 4};
+unsigned char keypad_row_bit[4] = {3, 2, 1, 0};
+unsigned char keypad_key[3][4] = {{'1', '4', '7', '*'},
+{'2', '5', '8', '0'},
+{'3', '6', '9', '#'}};
+unsigned char col; // column on keypad: 1, 2, 3
+unsigned char row; // row on keypad:    1, 2, 3, 4
+ 
+// Configure port
+DDRB = 0b11110000; // Pins 0-3 for input, and pins 4-7 for output
+ 
+/* Scan the keypad to find which key is being pressed */
+key = 0;
+for (col = 1; col <= 3; col++){
+// Send binary ZERO to corresponding pin for the column
+PORTB = ~(1 << (keypad_col_bit[col-1]));
+ 
+// Create a short delay
+asm volatile("nop");
+asm volatile("nop");
+ 
+// Read back from port
+port_value = PINB;
+
+for (row = 1; row <= 4; row ++){
+// Check the corresponding pin for the row
+if ((port_value & (1 << (keypad_row_bit[row-1]))) ==0)
+key = keypad_key[col-1][row-1];
+}
+}
+return key;
+}
+ 
+void serial_send(unsigned char data){
+ 
+// Wait until UDRE flag = 1
+ 
+while ((UCSRA & (1 << UDRE)) == 0x00){;}
+ 
+// Write char to UDR for transmission
+ 
+UDR = data;
+ 
+}
+ 
+ 
+int main(void)
+{
+    /* Replace with your application code */
+unsigned char reading;
+unsigned char prevreading = 0x00;
+serial_init();
+
+    while (1) 
+    {
+reading = read_keypad();
+if (reading != prevreading){
+serial_send(reading);
+}
+else{
+continue;
+}
+prevreading = reading;
+
+    }
+}
