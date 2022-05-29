@@ -1,0 +1,32 @@
+//Write a C interrupt-driven program to use the serial port of ATmega16 at baud rate 1200
+//no parity , 1 stop bit, 8 data bits, clock speed 1MHz. Whenever a character is received, it should be sent to Port B.
+
+
+#include <avr/io.h>
+#include <avr/interrupt.h>
+
+void serial_init(void){
+	UCSRA = 0b00000000; //normal speed, disable multiproc
+	
+	UCSRB = 0b10011000;//enable RX and TX pins and enable RX interrpt
+	UCSRC = 0b10000110; //asynchronous mode, no parity, 1 stop bit, 8 data bits
+	
+	//baud rate 1200bps, assuming 1MHZ clock 
+	UBRRL= 0x33;
+	UBRRH = 0x00;
+		
+}
+
+ISR(USART_RXC_vect){
+	PORTB = UDR;
+}
+
+
+int main(void)
+{
+    serial_init();
+	sei();
+	DDRB = 0xFF;
+    while (1) {;}
+    return 0;
+}
