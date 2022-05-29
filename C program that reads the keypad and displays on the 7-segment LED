@@ -93,7 +93,7 @@ void display_7led(unsigned char key){
 }
 	
 
-
+// recheck this!!
 int main(void)
 {
 	unsigned char reading;
@@ -109,7 +109,7 @@ int main(void)
 	else{
 		continue;
 	}
-   
+        prevreading = reading;
     
 }
 }
