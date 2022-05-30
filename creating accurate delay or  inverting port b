@@ -1,0 +1,37 @@
+/*
+ * GccApplication8.c
+ *
+ * Created: 30/05/2022 9:22:38 PM
+ * Author : dsp852
+ */ 
+// program to invert port B every 4 seconds 
+#include <avr/io.h>
+#include<avr/interrupt.h>
+
+
+volatile int overflow_count; //declare a global variable 
+
+
+ISR(TIMER1_OVF_vect){ //ISR for Timer 1 overflow interrupt
+	
+	overflow_count++; //increment overflow count
+	if (overflow_count>= 61){ // when 4s has passed 
+		overflow_count = 0; // start new count 
+		PORTB = (~PORTB); //invert port B 
+	}	
+	
+}
+
+
+int main(void)
+{
+   DDRB  = 0xFF;
+   PORTB = 0x00;
+   overflow_count = 0; // initialise overflow count
+   TCCR1A = 0b00000000; // normal mode
+   TCCR1B = 0b00000001; //no prescaler, internal clock 
+   TIMSK = 0b000000100; //enable timer 1 overflow interrupt 
+   sei();               //enable subsystem globally 
+    while (1) {;}  //infinite loop
+    return 0;
+}
