@@ -1,0 +1,152 @@
+/*
+ * GccApplication1.c
+ *
+ * Created: 8/04/2022 2:51:25 PM
+ * Author : dsp852
+ */
+
+// measuring the frequency(from period) of a square signal using timer 1 interrupts 
+// displaying string via serial 
+
+//AVR header files
+
+#include <avr/io.h>
+#include <avr/interrupt.h>
+#include <inttypes.h>
+#include <stdio.h>
+
+
+
+//Function Definitions
+
+void init_USART(void);
+int send_string(char char2send, FILE *stream);
+
+
+
+//Global variables
+
+volatile uint32_t period;
+volatile uint32_t n;
+volatile uint32_t freq;
+
+
+
+
+ISR(TIMER1_CAPT_vect){   // handler for Timer1 input capture interrupt
+period = ICR1 + (n<<16);       // period = value of Timer 1 stored in ICR1
+TCNT1 = 0;                     // reset Timer 1
+n = 0;
+freq = 1000000/period;        //freq from period      
+PORTB = ~freq;
+
+}
+
+
+ISR(TIMER1_OVF_vect){   // handler for Timer1 overflow interrupt
+n++;                   // increment overflow count
+
+}
+
+
+
+int main(void){
+
+//port b for output
+DDRB = 0xFF;
+
+PORTB = 0xFF;
+
+
+
+//Initialise USART
+
+init_USART();
+
+
+
+// Initialise the standard IO handlers
+
+stdout = fdevopen(send_string, NULL);
+
+// Timer Initialisation
+
+// TCCR1A.1,0 Operation mode MSB 00=Normal Operation
+
+TCCR1A = 0b00000000;
+
+
+// TCCR1B.4,3 Operation mode LSB 00=Normal Operation
+
+// .2,1,0 Clock select bit 001=No prescaler
+
+TCCR1B = 0b11000001;
+
+
+
+// TIMSK.5 Timer1 input capture interrupt enable 1=Enabled
+
+// .2 Timer1 overflow interrupt 1=Enabled
+
+TIMSK = 0b00100100;
+
+
+
+// Enable global interrupts
+
+sei();
+
+
+
+     while(1){
+
+        printf("\n\rperiod = %ldus, Frequency = %dHz", period, freq);
+     }
+
+}
+
+
+
+void init_USART(){
+
+// Normal speed, disable multi-proc
+
+// No settings
+
+UCSRA = 0b00000000;
+
+// Enable Tx and Rx, enable RX interrupt
+
+UCSRB = 0b00011000;
+
+// Asynchronous mode, no parity, 1 stop bit, 8 data bits
+
+//UCSRC.7 1=Write to UCSRC 0=Write to UBBRH
+
+//
+UCSRC = 0b10000110;
+
+// Baud rate 1200bps, assuming 1MHz clock
+
+UBRRL = 0x33;
+UBRRH = 0x00;
+
+return;
+
+}
+
+
+
+int send_string(char char2send, FILE*stream){
+
+//wait until UDRE is 1 before sending data
+
+    while((UCSRA & 1<<UDRE) == 0x00){;}
+
+//Send the character via serial
+
+UDR = char2send;
+
+return 0;
+
+}
