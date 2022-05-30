@@ -1,0 +1,105 @@
+/*
+ * GccApplication1.c
+ *
+ * Created: 13/05/2022 1:37:35 PM
+ * Author : dsp852
+ */
+
+
+//reading analouge voltatge and sending it to serial port
+//light sensor acdc conversion and display on hypterm
+
+#include <avr\io.h>
+#include <avr\interrupt.h>
+#include <stdio.h>
+
+
+void init_USART(){
+
+
+// Normal speed, disable multi-proc
+
+// No settings
+
+UCSRA = 0b00000000;
+
+// Enable Tx and Rx, enable RX interrupt
+
+UCSRB = 0b00011000;
+
+// Asynchronous mode, no parity, 1 stop bit, 8 data bits
+
+
+//UCSRC.7 1=Write to UCSRC 0=Write to UBBRH//
+UCSRC = 0b10000110;
+// Baud rate 1200bps, assuming 1MHz clock
+UBRRL = 0x19;
+UBRRH = 0x00;
+
+return;
+
+}
+
+
+
+int serial_send(char c, FILE *stream){
+
+while ((UCSRA & (1 << UDRE)) == 0x00){;} // Wait until UDRE flag is set to logic 1
+
+
+UDR = c; // Write character to UDR for transmission
+
+return 0;
+
+}
+
+
+int main (void){
+
+unsigned long  input_voltage;
+unsigned int result_low,result_high,result_x;
+
+init_USART();
+
+stdout= fdevopen(serial_send,NULL);
+
+
+unsigned int result;
+DDRB = 0xFF; // set port B for output
+
+ADMUX = 0b01000110;  // REFS1:0 = 01    -> AVCC = 5V as reference,
+
+// ADLAR   =  1    -> Left adjust,
+// MUX4:0  = 00001 -> ADC1 as input,
+
+ADCSRA = 0b10000111; // ADEN = 1:  enable ADC,
+// ADSC = 0:  don't start conversion yet,
+
+// ADATE = 0: disable auto trigger,
+// ADIE  = 0: disable ADC interrupt,
+// ASPS2:0 = 001: ADC prescaler = 128.
+
+while(1){ // main loop
+
+
+
+
+ADCSRA = ADCSRA | 0b01000000; // Start conversion by setting flag ADSC
+
+while (ADCSRA & (1 << ADSC)){;} // Wait until conversion is completed
+
+//read digital output 
+result_low = ADCL; // low 8 bits in ADCL
+result_high = ADCH & 0b00000011; // bit 8 and 9 in ADCH
+result_x = (result_high << 8) + result_low;
+
+
+input_voltage = ((unsigned long)result_x*5000ul) / 1024; //calculating input voltage from result 
+
+printf("\n\r ADC digital value = %d, input voltage= %ld ", result_x,  input_voltage);
+
+}
+
+return 0;
+
+}
