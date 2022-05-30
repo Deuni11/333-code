@@ -4,6 +4,7 @@
  * Created: 29/04/2022 1:44:18 PM
  * Author : dsp852
  */
+ //generating a pwm signal with variable frequency and duty cycle 
 
 #include <avr\io.h>
 #include <avr\interrupt.h>
