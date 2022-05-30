@@ -96,20 +96,12 @@ void display_7led(unsigned char key){
 // recheck this!!
 int main(void)
 {
-	unsigned char reading;
-	unsigned char prevreading = 0x00;
-	
-	read_keypad();
-	
-    while(1){
-	reading = read_keypad();
-	if(reading != prevreading){
-		display_7led(reading);
+       while(1){
+		unsigned char keyv = read_keypad();
+		display_7led(keyv);
 	}
-	else{
-		continue;
-	}
-        prevreading = reading;
+	return 1;
+	
     
-}
+
 }
